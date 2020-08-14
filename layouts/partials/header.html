@@ -1,63 +1,82 @@
-<div uk-sticky="sel-target: .uk-navbar-container; cls-active: uk-navbar-sticky; bottom: #transparent-sticky-navbar">
-    <nav class="uk-navbar-container uk-margin" uk-navbar="mode: click;" style="padding-right: 3rem">
-        <div class="uk-navbar-right">
-            <ul class="uk-navbar-nav uk-visible@s">
-                {{if .IsHome}}
-                <li class="uk-active "><a style="font-size: 18px; text-transform: none"
-                        href="{{.Site.BaseURL}}">{{ with .Site.Params.Home }} {{ . }} {{ end }}</a></li>
-                {{else}}
-                <li><a style="font-size: 18px; text-transform: none" href="/">{{ with .Site.Params.Home }} {{ . }}
-                        {{ end }}</a></li>
+{{ "<!-- navigation -->" | safeHTML }}
+<header class="fixed-top navigation">
+  <div class="container">
+    <!-- navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-transparent">
+      <a class="navbar-brand" href="{{ .Site.BaseURL | relLangURL }}"><img class="img-fluid"
+          src="{{ .Site.Params.logo | absURL }}" alt="{{ .Site.Title }}"></a>
+      <button class="navbar-toggler border-0" type="button" data-toggle="collapse" data-target="#navigation">
+        <i class="ti-align-right h3 text-white"></i>
+      </button>
 
-                {{end}}
-                {{ range .Site.Menus.main }}
-                {{$aURL := .URL | relLangURL}}
-                {{$page := $.Page.Permalink | relLangURL}}
-                {{$aURL2 := split $aURL "/"}}
-                {{$page2 := split $page "/"}}
-                {{$aURL3 := index $aURL2 1}}
-                {{$page3 := index $page2 1}}
-                {{if eq $aURL3 $page3}}
-                <li class="uk-active"><a style="font-size: 18px; text-transform:none"
-                        href="{{ .URL | relURL }}">{{.Name}}</a></li>
-                {{else}}
-                <li><a style="font-size: 18px; text-transform: none" href="{{ .URL | relURL }}">{{.Name}}</a></li>
-                {{end}}
-                {{end}}
-            </ul>
-
-            <a class="uk-navbar-toggle uk-hidden@s" uk-toggle="target: #sidenav" uk-navbar-toggle-icon href="#"></a>
-
-        </div>
-    </nav>
-</div>
-
-<div id="sidenav" uk-offcanvas="overlay: true">
-    <div class="uk-offcanvas-bar uk-flex uk-flex-column">
-
-        <ul class="uk-nav uk-nav-primary uk-nav-center uk-margin-auto-vertical">
-            {{if .IsHome}}
-            <li class="uk-active"><a style="font-size: 18px" href="{{.Site.BaseURL}}">{{ with .Site.Params.Home }} {{ . }} {{ end }}</a>
-            </li>
-            {{else}}
-            <li><a style="font-size: 18px" href="{{.Site.BaseURL}}">{{ with .Site.Params.Home }} {{ . }} {{ end }}</a></li>
-
-            {{end}}
-            {{ range .Site.Menus.main }}
-            {{$aURL := .URL | relLangURL}}
-            {{$page := $.Page.Permalink | relLangURL}}
-            {{$aURL2 := split $aURL "/"}}
-            {{$page2 := split $page "/"}}
-            {{$aURL3 := index $aURL2 1}}
-            {{$page3 := index $page2 1}}
-            {{if eq $aURL3 $page3}}
-            <li class="uk-active"><a style="font-size: 18px" href="{{ .URL | relURL }}">{{.Name}}</a></li>
-            {{else}}
-            <li><a style="font-size: 18px" href="{{ .URL | relURL }}">{{.Name}}</a></li>
-            {{end}}
-            {{end}}
+      <div class="collapse navbar-collapse text-center" id="navigation">
+        <ul class="navbar-nav ml-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="{{ .Site.BaseURL | relLangURL }}">{{ .Site.Params.Home }}</a>
+          </li>
+          {{ range .Site.Menus.main }}
+          {{ if .HasChildren }}
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-haspopup="true"
+              aria-expanded="false">
+              {{ .Name }}
+            </a>
+            <div class="dropdown-menu">
+              {{ range .Children }}
+              <a class="dropdown-item" href="{{ .URL | absURL }}">{{ .Name }}</a>
+              {{ end }}
+            </div>
+          </li>
+          {{ else }}
+          <li class="nav-item">
+            <a class="nav-link" href="{{ .URL | absURL }}">{{ .Name }}</a>
+          </li>
+          {{ end }}
+          {{ end }}
         </ul>
 
-    </div>
-</div>
-{{ template "_internal/google_analytics.html" . }}
+        <!-- Language List -->
+        {{ if .IsTranslated }}
+        <select class="m-2 border-0" id="select-language" onchange="location = this.value;">
+          {{ $siteLanguages := .Site.Languages}}
+          {{ $pageLang := .Page.Lang}}
+          {{ range .Page.AllTranslations }}
+          {{ $translation := .}}
+          {{ range $siteLanguages }}
+          {{ if eq $translation.Lang .Lang }}
+          {{ $selected := false }}
+          {{ if eq $pageLang .Lang}}
+          <option id="{{ $translation.Language }}" value="{{ $translation.Permalink }}" selected>{{ .LanguageName }}
+          </option>
+          {{ else }}
+          <option id="{{ $translation.Language }}" value="{{ $translation.Permalink }}">{{ .LanguageName }}</option>
+          {{ end }}
+          {{ end }}
+          {{ end }}
+          {{ end }}
+        </select>
+        {{ end }}
+
+        {{ if .Site.Params.search }}
+        {{ "<!-- search -->" | safeHTML }}
+        <div class="search px-4">
+          <button id="searchOpen" class="search-btn"><i class="ti-search"></i></button>
+          <div class="search-wrapper">
+            <form action="{{ `search`| relLangURL }}" class="h-100">
+              <input class="search-box px-4" id="search-query" name="s" type="search" placeholder="Type & Hit Enter...">
+            </form>
+            <button id="searchClose" class="search-close"><i class="ti-close text-dark"></i></button>
+          </div>
+        </div>
+        {{ end }}
+
+        {{ if .Site.Params.navigation_button.enable }}
+        {{ "<!-- get start btn -->" | safeHTML }}
+        <a href="{{ .Site.Params.navigation_button.link | absURL }}"
+          class="btn btn-primary ml-lg-4">{{ .Site.Params.navigation_button.label }}</a>
+        {{ end }}
+      </div>
+    </nav>
+  </div>
+</header>
+{{ "<!-- /navigation -->" | safeHTML }}
